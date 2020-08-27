@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>todoList</title>
+</head>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-size: 16px;
+        background: #CDCDCD;
+    }
+
+    header {
+        height: 50px;
+        background: rgba(47, 47, 47, 0.98);
+    }
+
+    section {
+        width: 600px;
+        padding: 0 10px;
+        margin: 0 auto;
+    }
+
+    form {
+        display: block;
+        margin-top: 0em;
+    }
+
+    label {
+        float: left;
+        width: 100px;
+        line-height: 50px;
+        color: #DDD;
+        font-size: 24px;
+        cursor: pointer;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    header input {
+        float: right;
+        width: 60%;
+        height: 24px;
+        margin-top: 12px;
+        text-indent: 10px;
+        border-radius: 5px;
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.24), 0 1px 6px rgba(0, 0, 0, 0.45) inset;
+        border: none;
+    }
+
+    h2 {
+        position: relative;
+    }
+
+    span {
+        position: absolute;
+        top: 2px;
+        right: 5px;
+        display: inline-block;
+        padding: 0 5px;
+        height: 20px;
+        border-radius: 20px;
+        background: #E6E6FA;
+        line-height: 22px;
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+    }
+
+    ol,
+    ul {
+        padding: 0;
+        list-style: none;
+    }
+
+    li {
+        height: 32px;
+        line-height: 32px;
+        background: #fff;
+        position: relative;
+        margin-bottom: 10px;
+        padding: 0 45px;
+        border-radius: 3px;
+        border-left: 5px solid #629A9C;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
+    }
+
+    li input[type=checkbox]{
+        position: absolute;
+        top: 2px;
+        left: 10px;
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+    }
+
+    p {
+        margin: 0;
+    }
+
+    li a {
+        position: absolute;
+        top: 2px;
+        right: 5px;
+        display: inline-block;
+        width: 14px;
+        height: 12px;
+        border-radius: 14px;
+        border: 6px double #FFF;
+        background: #CCC;
+        line-height: 14px;
+        text-align: center;
+        color: #FFF;
+        font-weight: bold;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    ul li {
+        border-left: 5px solid #999;
+        opacity: 0.5;
+    }
+</style>
+
+<body>
+    <header>
+        <section>
+            <form action="javascript:;" id="form">
+                <label for="title">ToDoList</label>
+                <input type="text" id="title" name="title" placeholder="添加ToDo">
+            </form>
+        </section>
+    </header>
+    <section>
+        <h2>正在进行<span id="todocount"></span></h2>
+        <ol id="todolist"></ol>
+        <h2>已经完成 <span id="donecount"></span></h2>
+        <ul id="donelist">
+        </ul>
+    </section>
+    <script src="./jquery-3.4.1.min.js"></script>
+    <script>
+        $(function () {
+            // 数据渲染视图
+            // 数据驱动视图
+
+            // 加载数据方法
+            function loadData () {
+                var collection = localStorage.getItem('todo')
+                if(collection) {
+                    return JSON.parse(collection)
+                }else {
+                    return []
+                }
+            }
+            // 保存数据的方法
+            function saveData(data) {
+                localStorage.setItem('todo',JSON.stringify(data))
+            }
+            // 加载网页数据
+            load()
+            function load() {
+                var todoCount = 0;
+                var doneCount = 0;
+                var doneStr = ''
+                var todoStr = ''
+                var todoList = loadData()
+                if (todoList && todoList.length > 0) {
+                    // 有数据
+                    todoList.forEach(function (data, i) {
+                        if (data.done) {
+                            // 已经完成
+                            doneStr += `
+                            <li>
+                                <input type="checkbox" index=${i} checked='checked'>
+                                <p id="p-${i}" index=${i}>${data.title}</p>
+                                <a href="javascript:;">-</a>
+                            </li>
+                            `
+                            doneCount++
+                        } else {
+                            // 正在进行
+                            todoStr += `
+                            <li>
+                                <input type="checkbox" index=${i}>
+                                <p id="p-${i}" index=${i}>${data.title}</p>
+                                <a href="javascript:;">-</a>
+                            </li>
+                            `
+                            todoCount++
+                        }
+
+                        $('#todolist').html(todoStr)
+                        $('#donelist').html(doneStr)
+                    })
+                } else {
+                    // 无数据
+                    $('#todolist').html('')
+                    $('#donelist').html('')
+                }
+                $('#todocount').html(todoCount)
+                $('#donecount').html(doneCount)
+            }
+            // 添加数据的方法
+            $('#title').keydown(function (event) {
+                if (event.keyCode === 13) {
+                    // 获取输入框中的值
+                    var val = $(this).val()
+                    if (!val) {
+                        alert('不能为空，请重新输入')
+                    } else {
+                        var data = loadData()
+                        data.unshift({
+                            title: val,
+                            done: false
+                        })
+                        saveData(data)
+                        $(this).val('')
+                        load()
+                    }
+                }
+            })
+
+            // 事件代理的方式 删除操作
+            $('#todolist').on('click', 'a', function () {
+                var data = loadData()
+                var i = $(this).parent().index()
+                console.log(i);
+                data.splice(i, 1)
+                saveData(data)
+                load()
+            })
+
+            $('#donelist').on('click', 'a', function () {
+                var data =loadData()
+                var i = parseInt($('#donelist input[type=checkbox]').attr('index'))
+                console.log(i);
+                todoList.splice(i, 1)
+                saveData(data)
+                load()
+            })
+
+            // 更新数据
+            $('#todolist').on('change', 'input[type=checkbox]', function () {
+                var i = parseInt($(this).attr('index'))
+                update(i, 'done', true)
+            })
+            $('#donelist').on('change', 'input[type=checkbox]', function () {
+                var i = parseInt($(this).attr('index'))
+                update(i, 'done', false)
+            })
+            function update(i, key, value) {
+                var data = loadData()
+                var todo = data.splice(i, 1)[0]
+                todo[key] = value
+                data.splice(i, 0, todo)
+                saveData(data)
+                load()
+            }
+
+            // 编辑操作
+            $('#todolist').on('click','p',function () {
+                // var i = $(this).parent().index()
+                var i = parseInt($(this).attr('index'))
+                // console.log(i);
+                var title = $(this).html()
+                var $p = $(this)
+                $p.html(`
+                    <input type='text' id='input-${i}' value=${title}>
+                `)
+                // 选中
+                $(`#input-${i}`)[0].setSelectionRange(0,$(`#input-${i}`).val().length)
+                // 获取焦点
+                $(`#input-${i}`).focus()
+
+                // 失去焦点保存更改的数据
+                $(`#input-${i}`).blur(function() {
+                    if($(this).val().length === 0) {
+                        $p.html(title)
+                        alert('内容不能为空')
+                    }else {
+                        update(i,'title',$(this).val())
+                    }
+                })
+            })
+        })
+    </script>
+</body>
+
+</html>
